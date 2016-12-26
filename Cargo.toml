@@ -1,5 +1,5 @@
 [package]
-name = "OIDC-dev-rust"
+name = "oidc-dev-rust"
 version = "0.1.0"
 authors = ["Nephtys <christopher.kaag@gmail.com>"]
 
