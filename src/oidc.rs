@@ -42,46 +42,62 @@ pub struct RemoteVerifiedTokenStruct  {
     kid: String,
 }
 
-pub fn redirection_handler(config : ConfigStruct, req : &mut Request) ->  IronResult<Response>   {
+impl ConfigStruct {
 
-        /*
-            TODO: extract token and redirect url from state, etc.
-            */
-        let token = String::from("abc");
-        let url : String = String::from("abc.com");
-        let bearer : String = format_token_as_bearer_token(&token);
-        let together : String = format!("{}{}{}", url, "?token=".to_owned() , bearer);
-        let url = Url::parse(&together).unwrap();
-        Ok(Response::with((status::Found, Redirect(url.clone()))))
 
+pub fn redirection_handler(&self, req : &mut Request) ->  IronResult<Response>   {
+    let map : &params::Map = req.get_ref::<Params>().unwrap();
+
+    match map.get("state") {
+        Some(&Value::String(ref state))  => {
+
+            let para = state.from_base64().unwrap();
+            let decode = std::str::from_utf8(&para).unwrap();
+
+            match map.get("code") {
+                Some(&Value::String(ref code)) => {
+                    let token = self.exchange_code_for_access_token(code);
+                    let bearer : String = format_token_as_bearer_token(&token);
+                    let together : String = format!("{}{}{}", decode, "?token=".to_owned() , bearer);
+                    let url = Url::parse(&together).unwrap();
+                    Ok(Response::with((status::Found, Redirect(url.clone()))))
+                },
+                _ => Ok(Response::with(iron::status::NotFound)),
+            }
+        },
+        _ => Ok(Response::with(iron::status::NotFound)),
+    }
 }
 
-pub fn login_handler(config : ConfigStruct, req : &mut Request) -> IronResult<Response> {
+pub fn login_handler(&self, req : &mut Request) -> IronResult<Response> {
     let map : &params::Map = req.get_ref::<Params>().unwrap();
     println!("Parameter Map: {:?}", map);
     match map.get("url") {
         Some(&Value::String(ref url64))  => {
-            let para = url64.from_base64().unwrap();
-            let decode = std::str::from_utf8(&para).unwrap();
-            let url = Url::parse("http://rust-lang.org").unwrap(); //TODO: implement this
+            let together : String = format!("{target}?client_id={client_id}&response_type=code&scope=openid%20email&redirect_uri={redirect_uri}&state={state}",
+                target=self.auth_uri,
+                client_id=self.client_id,
+                redirect_uri = self.redirect_url,
+                state= url64);
+            let url = Url::parse(&together).unwrap();
             Ok(Response::with((status::Found, Redirect(url.clone()))))
         },
         _ => Ok(Response::with(iron::status::NotFound)),
     }
 }
 
-fn exchange_code_for_access_token(config : &ConfigStruct, code : &String) -> String {
+fn exchange_code_for_access_token(&self, code : &String) -> String {
         //TODO: make HTTP post call and wait for return
+    println!("Code:{}", code);
     "this is returned".to_owned()
 }
 
-fn format_token_as_bearer_token(token : &String) -> String {
-    //TODO: url encoded and so on
-    "this is a token".to_owned()
+
 }
 
 
-/* //TODO:
- fn verify_token() {
-
-}*/
+fn format_token_as_bearer_token(token : &String) -> String {
+    //TODO: url encoded and so on
+    println!("Code:{}", token);
+    "this is a token".to_owned()
+}
