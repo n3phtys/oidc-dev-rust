@@ -9,7 +9,7 @@ use self::iron::modifiers::Redirect;
 use self::iron::{Url, status};
 use self::params::{Params, Value};
 
-#[derive(Clone)]
+#[derive(Clone, RustcDecodable, RustcEncodable)]
 pub struct ConfigStruct  {
     pub redirect_endpoint: String,
     pub login_endpoint : String,

@@ -1,3 +1,4 @@
 target/
 OIDC-dev-rust.iml
 .idea/
+config.json

@@ -2,30 +2,19 @@ mod oidc;
 
 extern crate iron;
 extern crate router;
+extern crate rustc_serialize;
 
 use iron::prelude::*;
 use router::Router;
 use std::ops::Deref;
+use rustc_serialize::json;
 
 fn main() {
     print!("Starting server... ");
 
-    let config : oidc::ConfigStruct = oidc::ConfigStruct {
-        redirect_endpoint : "redirectendpoint".to_owned(),
-        login_endpoint : "login".to_owned(),
-        use_ssl: false,
-        sslcertpath : "./cert.p12".to_owned(),
-        certpassword : "password".to_owned(),
-        client_id : "myclientid".to_owned(),
-        project_id : "myprojectid".to_owned(),
-        auth_uri : "https://accounts.google.com/o/oauth2/auth".to_owned(),
-        token_uri : "https://www.googleapis.com/oauth2/v1/certs".to_owned(),
-        auth_provider_x509_cert_url : "https://www.googleapis.com/oauth2/v1/certs".to_owned(),
-        client_secret : "mysecret".to_owned(),
-        redirect_url : "redirect_url".to_owned(),
-        raw_host : "localhost".to_owned(),
-        port : 9123,
-    };
+    let json = r##"{"redirect_endpoint":"redirectendpoint","login_endpoint":"login","use_ssl":false,"sslcertpath":"./cert.p12","certpassword":"password","client_id":"myclientid","project_id":"myprojectid","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://www.googleapis.com/oauth2/v1/certs","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"mysecret","redirect_url":"redirect_url","raw_host":"localhost","port":9123}"##;
+
+    let config : oidc::ConfigStruct = json::decode(&json).unwrap();
 
     let config2 = config.clone();
     let local_config = config.clone();
@@ -43,5 +32,5 @@ fn main() {
         Iron::new(router).http(stri.deref()).unwrap();
     }
 
-    println!("started!")
+    println!("did not start!")
 }
