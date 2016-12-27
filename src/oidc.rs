@@ -48,22 +48,37 @@ impl ConfigStruct {
 pub fn redirection_handler(&self, req : &mut Request) ->  IronResult<Response>   {
     let map : &params::Map = req.get_ref::<Params>().unwrap();
 
+    println!("Parameter Map on redirected: {:?}", map);
+
     match map.get("state") {
         Some(&Value::String(ref state))  => {
 
-            let para = state.from_base64().unwrap();
-            let decode = std::str::from_utf8(&para).unwrap();
+            match state.from_base64() {
+                Ok(para) => {
+                    match std::str::from_utf8(&para) {
+                        Ok(decode) => {
+                            match map.get("code") {
+                                Some(&Value::String(ref code)) => {
+                                    let token = self.exchange_code_for_access_token(code);
+                                    let bearer : String = format_token_as_bearer_token(&token);
+                                    let together : String = format!("{}{}{}", decode, "?token=".to_owned() , bearer);
+                                    let urlres = Url::parse(&together);
 
-            match map.get("code") {
-                Some(&Value::String(ref code)) => {
-                    let token = self.exchange_code_for_access_token(code);
-                    let bearer : String = format_token_as_bearer_token(&token);
-                    let together : String = format!("{}{}{}", decode, "?token=".to_owned() , bearer);
-                    let url = Url::parse(&together).unwrap();
-                    Ok(Response::with((status::Found, Redirect(url.clone()))))
+                                    match urlres {
+                                        Ok(url) => Ok(Response::with((status::Found, Redirect(url.clone())))),
+                                        _ => Ok(Response::with((iron::status::Ok, "You were redirect but your url could not be parsed"))),
+                                    }
+
+                                },
+                                _ => Ok(Response::with(iron::status::NotFound)),
+                            }
+                        },
+                        _ => Ok(Response::with((iron::status::Ok, "You were redirect but your state could not be translated to utf-8"))),
+                    }
                 },
-                _ => Ok(Response::with(iron::status::NotFound)),
+                _ => Ok(Response::with((iron::status::Ok, "You were redirect but your state was not base64"))),
             }
+
         },
         _ => Ok(Response::with(iron::status::NotFound)),
     }
@@ -71,7 +86,7 @@ pub fn redirection_handler(&self, req : &mut Request) ->  IronResult<Response>  
 
 pub fn login_handler(&self, req : &mut Request) -> IronResult<Response> {
     let map : &params::Map = req.get_ref::<Params>().unwrap();
-    println!("Parameter Map: {:?}", map);
+    println!("Parameter Map on login: {:?}", map);
     match map.get("url") {
         Some(&Value::String(ref url64))  => {
             let together : String = format!("{target}?client_id={client_id}&response_type=code&scope=openid%20email&redirect_uri={redirect_uri}&state={state}",
