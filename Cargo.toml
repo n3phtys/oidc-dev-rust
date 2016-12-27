@@ -5,7 +5,10 @@ authors = ["Nephtys <christopher.kaag@gmail.com>"]
 
 [dependencies]
 time = "0.1"
-iron = "*"
 router = "*"
 rustc-serialize = "0.3"
 params = "*"
+
+[dependencies.iron]
+version = "*"
+features = ["ssl"]

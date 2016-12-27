@@ -15,7 +15,7 @@ pub struct ConfigStruct  {
     pub login_endpoint : String,
     pub use_ssl: bool,
     pub sslcertpath : String,
-    pub certpassword : String,
+    pub sslkeypath : String,
     pub client_id : String,
     pub project_id : String,
     pub auth_uri : String,

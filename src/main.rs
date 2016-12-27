@@ -14,7 +14,6 @@ use std::fs::File;
 fn main() {
     print!("Starting server... ");
 
-    //let json = r##"{"redirect_endpoint":"redirectendpoint","login_endpoint":"login","use_ssl":false,"sslcertpath":"./cert.p12","certpassword":"password","client_id":"myclientid","project_id":"myprojectid","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://www.googleapis.com/oauth2/v1/certs","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"mysecret","redirect_url":"redirect_url","raw_host":"localhost","port":9123}"##;
     let mut f = (File::open("config.json")).unwrap();
     let mut buffer = String::new();
     let size = f.read_to_string(&mut buffer);
@@ -36,6 +35,16 @@ fn main() {
 
     if !local_config.use_ssl {
         Iron::new(router).http(stri.deref()).unwrap();
+    } else {
+        // Avoid unused errors due to conditional compilation ('ssl' feature is not default)
+        use iron::Iron;
+        use std::path::{Path};
+
+        let key = Path::new(&local_config.sslkeypath).to_path_buf();
+        let cert = Path::new(&local_config.sslcertpath).to_path_buf();
+
+        Iron::new(router).https(stri.deref(), cert, key).unwrap();
+
     }
 
     println!("did not start!")
