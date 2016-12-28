@@ -10,11 +10,20 @@ use std::ops::Deref;
 use rustc_serialize::json;
 use std::io::prelude::*;
 use std::fs::File;
+use std::env;
 
 fn main() {
-    print!("Starting server... ");
 
-    let mut f = (File::open("config.json")).unwrap();
+    let args: Vec<_> = env::args().collect();
+    let configpath : String = if args.len() > 1 {
+        format!("{}", args[1])
+    } else {
+        "config.json".to_owned()
+    };
+
+    println!("Starting server with config at {}... ", configpath);
+
+    let mut f = (File::open(configpath)).unwrap();
     let mut buffer = String::new();
     let size = f.read_to_string(&mut buffer);
     println!("Have read in {0} bytes from file! As String: {1}", size.unwrap(), buffer);
